@@ -1,0 +1,10 @@
+/* Courier page (owner: Abenov Altair) */
+.dc-section { margin-bottom: 28px; }
+.dc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; margin-top: 10px; }
+.delivery-card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: grid; gap: 6px; }
+.dc-head { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.dc-addr { font-size: 17px; font-weight: 600; color: var(--navy); }
+.dc-who, .dc-items, .dc-time { font-size: 14px; }
+.delivery-card form { margin-top: 8px; }
+.count-pill { display: inline-block; min-width: 24px; padding: 1px 8px; border-radius: 999px; background: #E7F0F7; color: var(--teal); font-size: 13px; text-align: center; }
+.small { font-size: 13px; margin: 2px 0 0; }

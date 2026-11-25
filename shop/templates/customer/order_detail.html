@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/customer.css') }}">{% endblock %}
 {% block title %}Order #{{ order['order_id'] }} · Online Shop{% endblock %}
 {% block content %}
 <p class="crumbs"><a href="{{ url_for('customer.my_orders') }}">My orders</a> / Order #{{ order['order_id'] }}</p>
@@ -8,6 +9,13 @@
     <span class="badge badge-{{ order['payment_status'] }}">{{ order['payment_status'] }}</span>
   </div>
   <p class="muted">Placed on {{ order['order_date'] }} by {{ order['full_name'] }} · Delivery to {{ order['address'] }}</p>
+  {% if delivery %}
+    <div class="delivery">Delivery:
+      {% if delivery.status == 'waiting' %}<span class="badge badge-waiting">waiting for a courier</span>
+      {% elif delivery.status == 'on_the_way' %}<span class="badge badge-on_the_way">on the way</span> <span class="muted">courier {{ delivery.courier }}</span>
+      {% else %}<span class="badge badge-delivered">delivered</span> <span class="muted">{{ delivery.delivered_at }}</span>{% endif %}
+    </div>
+  {% endif %}
 
   <table class="tbl">
     <thead><tr><th>Product</th><th class="num">Quantity</th><th class="num">Price</th><th class="num">Sum</th></tr></thead>
