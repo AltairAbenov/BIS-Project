@@ -1,0 +1,15 @@
+/* Admin pages (owner: Bakyt Aiganym) */
+.counts { margin: -8px 0 16px; }
+.admin-grid { display: grid; grid-template-columns: 1fr 320px; gap: 16px; align-items: start; margin-bottom: 32px; }
+.admin-grid .form-card { margin: 0; }
+.table-scroll { overflow-x: auto; }
+.side-form .field select { width: 100%; padding: 10px 12px; font-size: 15px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+.side-form .btn { margin-top: 18px; }
+.tbl tr.off td { color: var(--muted); }
+.btn-small { padding: 6px 12px; font-size: 13px; margin: 0; }
+.role { font-size: 13px; font-weight: 600; text-transform: capitalize; }
+.role-admin { color: #7A3E9D; }
+.role-manager { color: var(--teal); }
+.role-courier { color: #9A4A0B; }
+@media (max-width: 860px) { .admin-grid { grid-template-columns: 1fr; } }
+.admin-grid > * { min-width: 0; }

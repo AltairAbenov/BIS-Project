@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Staff accounts · Admin{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">{% endblock %}
+{% block content %}
+<h1 class="page-title">Staff accounts</h1>
+<p class="muted counts">Active: {{ counts.get('admin', 0) }} admin · {{ counts.get('manager', 0) }} manager(s) · {{ counts.get('courier', 0) }} courier(s)</p>
+
+<div class="admin-grid">
+  <section class="form-card wide flush">
+    <div class="table-scroll">
+    <table class="tbl" id="staff">
+      <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Created</th><th></th></tr></thead>
+      <tbody>
+      {% for s in staff %}
+        <tr class="{{ 'off' if not s['is_active'] }}">
+          <td>{{ s['full_name'] }}{% if s['staff_id'] == me %} <small class="muted">(you)</small>{% endif %}<br><small class="muted">{{ s['phone'] or '' }}</small></td>
+          <td>{{ s['email'] }}</td>
+          <td><span class="role role-{{ s['role'] }}">{{ s['role'] }}</span></td>
+          <td>{% if s['is_active'] %}<span class="badge badge-paid">active</span>{% else %}<span class="badge badge-cancelled">disabled</span>{% endif %}</td>
+          <td><small>{{ s['created_at'] }}</small></td>
+          <td class="num">
+            {% if s['staff_id'] != me %}
+            <form method="post" action="{{ url_for('admin.staff_toggle', staff_id=s['staff_id'], action='disable' if s['is_active'] else 'enable') }}">
+              <button class="btn btn-small {{ 'btn-danger-outline' if s['is_active'] else 'btn-muted' }}" type="submit">{{ 'Disable' if s['is_active'] else 'Enable' }}</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <form class="form-card side-form" method="post" action="{{ url_for('admin.staff_new') }}" novalidate>
+    <h2 class="sub first">New staff account</h2>
+    {% if errors %}<div class="alert alert-error">Please fix the highlighted fields.</div>{% endif %}
+    {% macro field(name, label, type="text", hint="") %}
+      <label class="field {% if errors.get(name) %}has-error{% endif %}">
+        <span>{{ label }}</span>
+        <input type="{{ type }}" name="{{ name }}" value="{{ form.get(name, '') }}" autocomplete="off">
+        {% if errors.get(name) %}<small class="err">{{ errors[name] }}</small>{% elif hint %}<small class="muted">{{ hint }}</small>{% endif %}
+      </label>
+    {% endmacro %}
+    {{ field("full_name", "Full name") }}
+    {{ field("email", "Email", "email", "Used to log in") }}
+    {{ field("phone", "Phone (optional)", "tel") }}
+    <label class="field {% if errors.get('role') %}has-error{% endif %}">
+      <span>Role</span>
+      <select name="role">
+        {% for r in roles %}<option value="{{ r }}" {% if form.get('role') == r %}selected{% endif %}>{{ r|capitalize }}</option>{% endfor %}
+      </select>
+      {% if errors.get('role') %}<small class="err">{{ errors['role'] }}</small>{% endif %}
+    </label>
+    {{ field("password", "Temporary password", "text", "8+ characters, a letter and a digit") }}
+    <button class="btn btn-wide" type="submit">Create account</button>
+  </form>
+</div>
+{% endblock %}
