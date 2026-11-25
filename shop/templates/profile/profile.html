@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}My profile · Online Shop{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">{% endblock %}
+{% block content %}
+<section class="profile-head">
+  <div class="avatar">{{ me['full_name'][:1] }}</div>
+  <div>
+    <h1>{{ me['full_name'] }}</h1>
+    <p class="muted"><span class="role-tag">{{ me['role'] }}</span> · {{ me['email'] }} · with the shop since {{ me['created_at'][:10] }}</p>
+  </div>
+</section>
+
+{% if summary %}
+<section class="summary-cards" aria-label="Shop summary">
+  <div class="sc"><span>Orders today</span><b>{{ summary.orders_today }}</b></div>
+  <div class="sc"><span>Orders in {{ summary.month }}</span><b>{{ summary.orders_month }}</b></div>
+  <div class="sc ok"><span>Paid revenue in {{ summary.month }}</span><b>{{ summary.revenue_month|kzt }}</b></div>
+  <div class="sc warn"><span>Unpaid orders now</span><b>{{ summary.unpaid }}</b></div>
+  <div class="sc"><span>Failed payment attempts</span><b>{{ summary.failed_attempts }}</b></div>
+  <div class="sc"><span>Bestseller this month</span><b class="small-b">{{ summary.top_product or '—' }}</b>{% if summary.top_product %}<small>{{ summary.top_sold }} sold</small>{% endif %}</div>
+</section>
+{% endif %}
+
+<div class="profile-grid">
+  <form class="form-card" method="post" action="{{ url_for('profile.details') }}" novalidate>
+    <h2 class="sub first">My details</h2>
+    <label class="field {% if details_errors.get('full_name') %}has-error{% endif %}">
+      <span>Full name</span>
+      <input name="full_name" value="{{ form.get('full_name', me['full_name']) }}">
+      {% if details_errors.get('full_name') %}<small class="err">{{ details_errors['full_name'] }}</small>{% endif %}
+    </label>
+    <label class="field {% if details_errors.get('phone') %}has-error{% endif %}">
+      <span>Phone</span>
+      <input name="phone" type="tel" value="{{ form.get('phone', me['phone'] or '') }}">
+      {% if details_errors.get('phone') %}<small class="err">{{ details_errors['phone'] }}</small>{% endif %}
+    </label>
+    <label class="field">
+      <span>Email</span>
+      <input value="{{ me['email'] }}" disabled>
+      <small class="muted">Email and role are changed only by the admin.</small>
+    </label>
+    <button class="btn btn-wide" type="submit">Save details</button>
+  </form>
+
+  <form class="form-card" method="post" action="{{ url_for('profile.password') }}" novalidate>
+    <h2 class="sub first">Change password</h2>
+    {% for name, label in [('current', 'Current password'), ('new', 'New password'), ('repeat', 'Repeat new password')] %}
+      <label class="field {% if password_errors.get(name) %}has-error{% endif %}">
+        <span>{{ label }}</span>
+        <input type="password" name="{{ name }}" autocomplete="{{ 'current-password' if name == 'current' else 'new-password' }}">
+        {% if password_errors.get(name) %}<small class="err">{{ password_errors[name] }}</small>
+        {% elif name == 'new' %}<small class="muted">8+ characters, a letter and a digit</small>{% endif %}
+      </label>
+    {% endfor %}
+    <button class="btn btn-wide" type="submit">Change password</button>
+  </form>
+</div>
+{% endblock %}
