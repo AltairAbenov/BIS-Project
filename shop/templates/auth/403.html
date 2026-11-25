@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Access denied · Online Shop{% endblock %}
+{% block content %}
+<section class="form-card narrow">
+  <h1>Access denied</h1>
+  <p class="muted">Your account ({{ role }}) does not have access to this page.</p>
+  <a class="btn" href="{{ url_for('customer.index') }}">Go to the main page</a>
+</section>
+{% endblock %}

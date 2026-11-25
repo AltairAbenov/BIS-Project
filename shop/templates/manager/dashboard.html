@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Manager dashboard · Online Shop{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/manager.css') }}">{% endblock %}
+{% block content %}
+<h1 class="page-title">Manager dashboard</h1>
+
+<section class="kpis">
+  <div class="kpi"><span>All orders</span><b>{{ summary.orders }}</b></div>
+  <div class="kpi warn"><span>Unpaid (pending + failed)</span><b>{{ summary.unpaid or 0 }}</b><small>{{ summary.unpaid_sum|kzt }}</small></div>
+  <div class="kpi ok"><span>Paid revenue</span><b>{{ summary.revenue|kzt }}</b></div>
+  <div class="kpi"><span>Cancelled</span><b>{{ summary.cancelled or 0 }}</b></div>
+</section>
+
+<section class="low-strip" aria-label="Low stock">
+  <b>Low stock</b> <span class="muted">(less than {{ low_limit }})</span>
+  {% for p in low_stock %}
+    <span class="chip {{ 'zero' if p['stock_qty'] == 0 }}">{{ p['name'] }} · {{ p['stock_qty'] }}</span>
+  {% else %}
+    <span class="muted">all products have enough stock</span>
+  {% endfor %}
+</section>
+
+<section class="form-card wide flush-top mgr-orders">
+  <form class="toolbar inner" method="get">
+    <input class="search" type="search" name="q" value="{{ q }}" placeholder="Customer name or email" aria-label="Search customer">
+    <select name="status" aria-label="Status">
+      <option value="">All statuses</option>
+      <option value="unpaid" {% if status == 'unpaid' %}selected{% endif %}>Unpaid only</option>
+      {% for s in statuses %}<option value="{{ s }}" {% if s == status %}selected{% endif %}>{{ s|capitalize }}</option>{% endfor %}
+    </select>
+    <button class="btn" type="submit">Show</button>
+    {% if q or status %}<a class="reset" href="{{ url_for('manager.dashboard') }}">Reset</a>{% endif %}
+  </form>
+
+  <div class="table-scroll">
+  <table class="tbl" id="orders">
+    <thead><tr><th>Order</th><th>Date</th><th>Customer</th><th>Products</th><th class="num">Total</th><th>Status</th><th class="num">Payment attempts</th></tr></thead>
+    <tbody>
+    {% for o in orders %}
+      <tr>
+        <td><a href="{{ url_for('manager.order_view', order_id=o['order_id']) }}">#{{ o['order_id'] }}</a></td>
+        <td class="nowrap">{{ o['order_date'] }}</td>
+        <td>{{ o['full_name'] }}<br><small class="muted">{{ o['email'] }}</small></td>
+        <td>{{ o['products'] }}</td>
+        <td class="num">{{ o['total_amount']|kzt }}</td>
+        <td><span class="badge badge-{{ o['payment_status'] }}">{{ o['payment_status'] }}</span></td>
+        <td class="num">{{ o['attempts'] }}{% if o['failed'] %} <small class="err">({{ o['failed'] }} failed)</small>{% endif %}</td>
+      </tr>
+    {% else %}
+      <tr><td colspan="7" class="muted">No orders match the filter.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</section>
+{% endblock %}

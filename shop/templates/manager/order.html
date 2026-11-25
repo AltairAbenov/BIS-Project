@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Order #{{ order['order_id'] }} · Manager{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/manager.css') }}">{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="{{ url_for('manager.dashboard') }}">Dashboard</a> / Order #{{ order['order_id'] }}</p>
+<section class="form-card wide">
+  <div class="order-head">
+    <h1>Order #{{ order['order_id'] }}</h1>
+    <span class="badge badge-{{ order['payment_status'] }}">{{ order['payment_status'] }}</span>
+  </div>
+  <p class="muted">{{ order['order_date'] }} · {{ order['full_name'] }} · {{ order['email'] }}{% if order['phone'] %} · {{ order['phone'] }}{% endif %} · {{ order['address'] }}</p>
+  <div class="table-scroll">
+  <table class="tbl">
+    <thead><tr><th>Product</th><th class="num">Quantity</th><th class="num">Price</th><th class="num">Sum</th></tr></thead>
+    <tbody>{% for it in items %}<tr><td>{{ it['name'] }}</td><td class="num">{{ it['quantity'] }}</td><td class="num">{{ it['unit_price']|kzt }}</td><td class="num">{{ it['line_total']|kzt }}</td></tr>{% endfor %}</tbody>
+    <tfoot><tr><td colspan="3">Total</td><td class="num">{{ order['total_amount']|kzt }}</td></tr></tfoot>
+  </table>
+  </div>
+  <h2 class="sub">Payment attempts ({{ payments|length }})</h2>
+  {% if payments %}
+  <ul class="attempts">
+    {% for p in payments %}<li><span class="badge badge-{{ p['status'] }}">{{ p['status'] }}</span> {{ p['method'] }} · {{ p['amount']|kzt }} · {{ p['paid_at'] }}</li>{% endfor %}
+  </ul>
+  {% else %}<p class="muted">No payment attempts yet.</p>{% endif %}
+</section>
+{% endblock %}
