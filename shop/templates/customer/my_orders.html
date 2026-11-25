@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}My orders · Online Shop{% endblock %}
+{% block content %}
+<h1 class="page-title">My orders</h1>
+{% if orders %}
+<div class="form-card wide flush">
+  <table class="tbl">
+    <thead><tr><th>Order</th><th>Date</th><th>Products</th><th class="num">Total</th><th>Status</th></tr></thead>
+    <tbody>
+    {% for o in orders %}
+      <tr>
+        <td><a href="{{ url_for('customer.order_detail', order_id=o['order_id']) }}">#{{ o['order_id'] }}</a></td>
+        <td>{{ o['order_date'] }}</td>
+        <td>{{ o['products'] }}</td>
+        <td class="num">{{ o['total_amount']|kzt }}</td>
+        <td><span class="badge badge-{{ o['payment_status'] }}">{{ o['payment_status'] }}</span></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+  <div class="form-card wide">
+    <p>You have no orders yet.</p>
+    <a class="btn" href="{{ url_for('customer.index') }}">Go to the catalog</a>
+  </div>
+{% endif %}
+{% endblock %}

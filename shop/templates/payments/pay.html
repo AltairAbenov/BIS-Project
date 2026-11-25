@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Pay for order #{{ order['order_id'] }} · Online Shop{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="{{ url_for('customer.my_orders') }}">My orders</a> / <a href="{{ url_for('customer.order_detail', order_id=order['order_id']) }}">Order #{{ order['order_id'] }}</a> / Payment</p>
+<section class="order-layout">
+  <form class="form-card order-form" method="post" novalidate id="pay-form">
+    <h1>Payment</h1>
+    {% if error %}<div class="alert alert-error">{{ error }}</div>{% endif %}
+
+    <span class="field-label">Payment method</span>
+    <div class="methods">
+      {% for m in methods %}
+        <label class="method"><input type="radio" name="method" value="{{ m }}" {% if m == method %}checked{% endif %}>
+          {{ {'card': 'Bank card', 'kaspi': 'Kaspi QR', 'cash': 'Cash on delivery'}[m] }}</label>
+      {% endfor %}
+    </div>
+
+    <div class="demo">
+      <span class="field-label">Bank answer <span class="tag">demo</span></span>
+      <label><input type="radio" name="bank_answer" value="approved" checked> Approved</label>
+      <label><input type="radio" name="bank_answer" value="declined"> Declined</label>
+      <small class="muted">There is no real bank in the prototype, so you choose the answer to test both cases.</small>
+    </div>
+
+    <button class="btn btn-big btn-wide" type="submit" id="pay-btn">Pay {{ order['total_amount']|kzt }}</button>
+  </form>
+
+  <div class="order-product">
+    <h2 class="sub first">Order #{{ order['order_id'] }} <span class="badge badge-{{ order['payment_status'] }}">{{ order['payment_status'] }}</span></h2>
+    <table class="features">
+      {% for it in items %}
+        <tr><th>{{ it['name'] }} × {{ it['quantity'] }}</th><td>{{ it['line_total']|kzt }}</td></tr>
+      {% endfor %}
+      <tr class="total-row"><th>Total</th><td>{{ order['total_amount']|kzt }}</td></tr>
+    </table>
+    {% if payments %}
+      <h2 class="sub">Earlier attempts</h2>
+      <ul class="attempts">
+        {% for p in payments %}
+          <li><span class="badge badge-{{ p['status'] }}">{{ p['status'] }}</span> {{ p['method'] }} · {{ p['paid_at'] }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+    <form method="post" action="{{ url_for('payments.cancel', order_id=order['order_id']) }}"
+          onsubmit="return confirm('Cancel order #{{ order['order_id'] }}? The items will go back to the warehouse.');">
+      <button class="btn btn-wide btn-danger-outline" type="submit">Cancel order instead</button>
+    </form>
+  </div>
+</section>
+<script>
+  document.getElementById("pay-form").addEventListener("submit", () => {
+    setTimeout(() => { document.getElementById("pay-btn").disabled = true; }, 0);
+  });
+</script>
+{% endblock %}

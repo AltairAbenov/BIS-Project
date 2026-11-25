@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Register · Online Shop{% endblock %}
+{% block content %}
+<section class="form-card">
+  <h1>Create an account</h1>
+  <p class="muted">We need these details to deliver your orders.</p>
+
+  {% if errors %}
+    <div class="alert alert-error">Please fix the highlighted fields.</div>
+  {% endif %}
+
+  <form method="post" novalidate>
+    {% macro field(name, label, type="text", required=true, hint="") %}
+      <label class="field {% if errors.get(name) %}has-error{% endif %}">
+        <span>{{ label }}{% if required %} <b>*</b>{% endif %}</span>
+        <input type="{{ type }}" name="{{ name }}" value="{{ form[name] }}"
+               {% if required %}required{% endif %} autocomplete="off">
+        {% if errors.get(name) %}<small class="err">{{ errors[name] }}</small>
+        {% elif hint %}<small class="muted">{{ hint }}</small>{% endif %}
+      </label>
+    {% endmacro %}
+
+    {{ field("full_name", "Full name", hint="Letters only, e.g. Aigerim Shointay or Айгерим Шойынтай") }}
+    {{ field("email", "Email", "email", hint="Used as your login. Must be unique.") }}
+    {{ field("phone", "Phone", "tel", required=false, hint="Optional, Kazakhstan number, e.g. +7 701 123 45 67") }}
+    {{ field("address", "Delivery address", hint="City, street, house / flat") }}
+    <div class="row">
+      {{ field("password", "Password", "password", hint="8+ characters, a letter and a digit") }}
+      {{ field("password2", "Repeat password", "password") }}
+    </div>
+
+    <label class="show-pw"><input type="checkbox" id="show-pw"> Show passwords</label>
+
+    <button class="btn btn-big btn-wide" type="submit">Register</button>
+    <p class="muted small-gap">Already have an account? <a href="{{ url_for('auth.login', next=request.args.get('next')) }}">Log in</a></p>
+  </form>
+</section>
+<script>
+  document.getElementById("show-pw").addEventListener("change", (e) => {
+    document.querySelectorAll('input[name=password], input[name=password2]')
+      .forEach((i) => { i.type = e.target.checked ? "text" : "password"; });
+  });
+</script>
+{% endblock %}

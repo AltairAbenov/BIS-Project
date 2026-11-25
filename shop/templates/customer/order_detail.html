@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Order #{{ order['order_id'] }} · Online Shop{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="{{ url_for('customer.my_orders') }}">My orders</a> / Order #{{ order['order_id'] }}</p>
+<section class="form-card wide">
+  <div class="order-head">
+    <h1>Order #{{ order['order_id'] }}</h1>
+    <span class="badge badge-{{ order['payment_status'] }}">{{ order['payment_status'] }}</span>
+  </div>
+  <p class="muted">Placed on {{ order['order_date'] }} by {{ order['full_name'] }} · Delivery to {{ order['address'] }}</p>
+
+  <table class="tbl">
+    <thead><tr><th>Product</th><th class="num">Quantity</th><th class="num">Price</th><th class="num">Sum</th></tr></thead>
+    <tbody>
+    {% for it in items %}
+      <tr><td>{{ it['name'] }}</td><td class="num">{{ it['quantity'] }}</td>
+          <td class="num">{{ it['unit_price']|kzt }}</td><td class="num">{{ it['line_total']|kzt }}</td></tr>
+    {% endfor %}
+    </tbody>
+    <tfoot><tr><td colspan="3">Total</td><td class="num">{{ order['total_amount']|kzt }}</td></tr></tfoot>
+  </table>
+
+  {% if payments %}
+    <h2 class="sub">Payment attempts</h2>
+    <ul class="attempts">
+      {% for p in payments %}
+        <li><span class="badge badge-{{ p['status'] }}">{{ p['status'] }}</span> {{ p['method'] }} · {{ p['paid_at'] }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+
+  {% if order['payment_status'] in ('pending', 'failed') %}
+    <div class="actions">
+      <a class="btn btn-big" href="{{ url_for('payments.pay', order_id=order['order_id']) }}">{{ 'Try to pay again' if order['payment_status'] == 'failed' else 'Pay now' }}</a>
+      <form method="post" action="{{ url_for('payments.cancel', order_id=order['order_id']) }}"
+            onsubmit="return confirm('Cancel order #{{ order['order_id'] }}? The items will go back to the warehouse.');">
+        <button class="btn btn-big btn-danger" type="submit">Cancel order</button>
+      </form>
+    </div>
+  {% elif order['payment_status'] == 'paid' %}
+    <p class="note ok">Paid. You can now <a href="{{ url_for('customer.product_page', product_id=items[0]['product_id']) }}#reviews">leave a review</a> for the product.</p>
+  {% elif order['payment_status'] == 'cancelled' %}
+    <p class="note">This order is cancelled. The items went back to the warehouse.</p>
+  {% endif %}
+</section>
+{% endblock %}

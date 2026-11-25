@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% from "_stars.html" import stars %}
+{% block title %}{{ product['name'] }} · Online Shop{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="{{ url_for('customer.index') }}">Catalog</a> / {{ product['name'] }}</p>
+<section class="order-layout">
+  <div class="order-product">
+    <div class="thumb big">{{ product['name']|initial }}</div>
+    <div class="cat">{{ product['category'] }}</div>
+    <h1>{{ product['name'] }}</h1>
+    <div class="card-rating"><a href="#reviews">{{ stars(rating_avg, rating_count) }}</a></div>
+    <div class="price">{{ product['price']|kzt }}</div>
+    {% if product['stock_qty'] > 0 %}
+      <div class="stock in">In stock: {{ product['stock_qty'] }}</div>
+    {% else %}
+      <div class="stock out">Out of stock</div>
+    {% endif %}
+
+    {% if features %}
+    <h2 class="sub">Features</h2>
+    <table class="features">
+      {% for f in features %}
+        <tr><th>{{ f['feature_name'] }}</th><td>{{ f['feature_value'] }}</td></tr>
+      {% endfor %}
+    </table>
+    {% endif %}
+  </div>
+
+  {% if user_name %}
+  <form class="form-card order-form" method="post" action="{{ url_for('customer.order', product_id=product['product_id']) }}" novalidate id="order-form">
+    <h2>Your order</h2>
+    {% if error %}<div class="alert alert-error">{{ error }}</div>{% endif %}
+    <input type="hidden" name="order_token" value="{{ token }}">
+
+    <label class="field {% if error %}has-error{% endif %}">
+      <span>Quantity <b>*</b></span>
+      <input type="number" name="quantity" id="qty" value="{{ qty }}" min="1"
+             max="{{ product['stock_qty'] }}" step="1" data-price="{{ product['price'] }}"
+             {% if product['stock_qty'] <= 0 %}disabled{% endif %}>
+      <small class="muted">From 1 to {{ product['stock_qty'] }}</small>
+    </label>
+
+    <div class="summary">
+      <div><span>Price</span><b>{{ product['price']|kzt }}</b></div>
+      <div><span>Delivery address</span><b>{{ address }}</b></div>
+      <div class="total"><span>Total</span><b id="total">{{ product['price']|kzt }}</b></div>
+    </div>
+
+    <button class="btn btn-big btn-wide" type="submit" id="place-order" {% if product['stock_qty'] <= 0 %}disabled{% endif %}>Place order</button>
+    <p class="muted small-gap">After placing the order you can pay for it or cancel it.</p>
+  </form>
+  {% else %}
+  <div class="form-card order-form">
+    <h2>Want to buy it?</h2>
+    <p class="muted">Log in or create an account to place an order.</p>
+    <a class="btn btn-big btn-wide" href="{{ url_for('auth.login', next=request.path) }}">Log in to order</a>
+    <p class="muted small-gap">No account yet? <a href="{{ url_for('customer.register', next=request.path) }}">Register</a></p>
+  </div>
+  {% endif %}
+</section>
+
+<section class="form-card wide reviews" id="reviews">
+  <div class="reviews-head">
+    <h2>Ratings and reviews</h2>
+    <div>{{ stars(rating_avg, rating_count) }}</div>
+  </div>
+
+  {% if review_state == 'can' %}
+  <form class="review-form" method="post" action="{{ url_for('customer.review', product_id=product['product_id']) }}" novalidate>
+    <span class="field-label">Your rating <b>*</b></span>
+    <div class="star-input" role="radiogroup" aria-label="Your rating">
+      {% for i in range(5, 0, -1) %}
+        <input type="radio" id="star{{ i }}" name="rating" value="{{ i }}"><label for="star{{ i }}" title="{{ i }} star{{ 's' if i > 1 }}">★</label>
+      {% endfor %}
+    </div>
+    <label class="field">
+      <span>Your feedback</span>
+      <textarea name="comment" rows="3" maxlength="500" placeholder="What did you like? What could be better?"></textarea>
+      <small class="muted">Optional, up to 500 characters</small>
+    </label>
+    <button class="btn" type="submit">Publish review</button>
+  </form>
+  {% elif review_state == 'done' %}
+    <p class="note">You have already reviewed this product. Thank you!</p>
+  {% elif review_state == 'not_bought' %}
+    <p class="note">Only customers who bought and paid for this product can leave a review.</p>
+  {% else %}
+    <p class="note"><a href="{{ url_for('auth.login', next=request.path) }}">Log in</a> to leave a review after your purchase.</p>
+  {% endif %}
+
+  {% for r in reviews %}
+    <article class="review">
+      <div class="review-top">{{ stars(r['rating'], 0, false) }} <b>{{ r['author'] }}</b> <span class="muted">· {{ r['day'] }}</span></div>
+      {% if r['comment'] %}<p>{{ r['comment'] }}</p>{% endif %}
+    </article>
+  {% else %}
+    <p class="muted">No reviews yet.</p>
+  {% endfor %}
+</section>
+
+<script>
+  // live total on the page; the server calculates the total again when the order is saved
+  const qty = document.getElementById("qty");
+  if (qty) {
+    const total = document.getElementById("total");
+    const update = () => {
+      const n = parseInt(qty.value, 10);
+      const sum = Number.isInteger(n) && n > 0 ? n * Number(qty.dataset.price) : 0;
+      total.textContent = sum.toLocaleString("ru-RU").replace(/ /g, " ") + " ₸";
+    };
+    qty.addEventListener("input", update);
+    update();
+  }
+  // the button is blocked after the first click; the order_token protects the server side too
+  const form = document.getElementById("order-form");
+  if (form) form.addEventListener("submit", () => {
+    setTimeout(() => { document.getElementById("place-order").disabled = true; }, 0);
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% from "_stars.html" import stars %}
+{% block content %}
+<section class="hero">
+  <h1>Computer accessories, delivered across Kazakhstan</h1>
+  <p>Choose a product, read real reviews from buyers, order and pay online.</p>
+  {% if not user_name %}
+    <a class="btn btn-big" href="{{ url_for('customer.register') }}">Create an account</a>
+  {% endif %}
+</section>
+
+<form class="toolbar" method="get" action="{{ url_for('customer.index') }}" role="search">
+  <input class="search" type="search" name="q" value="{{ q }}" placeholder="Search products, e.g. mouse" aria-label="Search products">
+  <select name="category" aria-label="Category">
+    <option value="">All categories</option>
+    {% for c in categories %}
+      <option value="{{ c }}" {% if c == category %}selected{% endif %}>{{ c }}</option>
+    {% endfor %}
+  </select>
+  <select name="sort" aria-label="Sort by">
+    <option value="popular" {% if sort == 'popular' %}selected{% endif %}>Best rated</option>
+    <option value="price_asc" {% if sort == 'price_asc' %}selected{% endif %}>Price: low to high</option>
+    <option value="price_desc" {% if sort == 'price_desc' %}selected{% endif %}>Price: high to low</option>
+    <option value="name" {% if sort == 'name' %}selected{% endif %}>Name</option>
+  </select>
+  <button class="btn" type="submit">Show</button>
+  {% if q or category %}<a class="reset" href="{{ url_for('customer.index') }}">Reset</a>{% endif %}
+</form>
+
+<h2 class="section-title">Catalog <span class="count">{{ products|length }} product{{ 's' if products|length != 1 }}{% if q %} for “{{ q }}”{% endif %}</span></h2>
+{% if products %}
+<div class="grid">
+  {% for p in products %}
+  <article class="card">
+    <a class="card-link" href="{{ url_for('customer.product_page', product_id=p['product_id']) }}">
+      <div class="thumb">{{ p['name']|initial }}</div>
+      <div class="cat">{{ p['category'] }}</div>
+      <h3>{{ p['name'] }}</h3>
+    </a>
+    <div class="card-rating">{{ stars(p['rating_avg'], p['rating_count']) }}</div>
+    <div class="price">{{ p['price']|kzt }}</div>
+    {% if p['stock_qty'] > 0 %}
+      <div class="stock in">In stock: {{ p['stock_qty'] }}</div>
+      <a class="btn btn-wide" href="{{ url_for('customer.product_page', product_id=p['product_id']) }}">View and order</a>
+    {% else %}
+      <div class="stock out">Out of stock</div>
+      <a class="btn btn-wide btn-muted" href="{{ url_for('customer.product_page', product_id=p['product_id']) }}">View details</a>
+    {% endif %}
+  </article>
+  {% endfor %}
+</div>
+{% else %}
+  <div class="form-card wide"><p>Nothing found. Try another word or <a href="{{ url_for('customer.index') }}">show all products</a>.</p></div>
+{% endif %}
+{% endblock %}
