@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/customer.css') }}">{% endblock %}
 {% from "_stars.html" import stars %}
 {% block content %}
 <section class="hero">
@@ -9,25 +10,31 @@
   {% endif %}
 </section>
 
-<form class="toolbar" method="get" action="{{ url_for('customer.index') }}" role="search">
-  <input class="search" type="search" name="q" value="{{ q }}" placeholder="Search products, e.g. mouse" aria-label="Search products">
+<form class="toolbar search-form" method="get" action="{{ url_for('customer.index') }}" role="search">
+  <input class="search" type="search" name="q" value="{{ f.q }}" placeholder="Search: name, category or feature (e.g. bluetooth, 1 TB)" aria-label="Search products">
   <select name="category" aria-label="Category">
     <option value="">All categories</option>
     {% for c in categories %}
-      <option value="{{ c }}" {% if c == category %}selected{% endif %}>{{ c }}</option>
+      <option value="{{ c }}" {% if c == f.category %}selected{% endif %}>{{ c }}</option>
     {% endfor %}
   </select>
+  <div class="price-range">
+    <input type="text" inputmode="numeric" name="min_price" value="{{ f.min_price if f.min_price is not none }}" placeholder="Price from" aria-label="Price from">
+    <span>–</span>
+    <input type="text" inputmode="numeric" name="max_price" value="{{ f.max_price if f.max_price is not none }}" placeholder="to, ₸" aria-label="Price to">
+  </div>
+  <label class="check"><input type="checkbox" name="in_stock" value="1" {% if f.in_stock %}checked{% endif %}> In stock only</label>
   <select name="sort" aria-label="Sort by">
-    <option value="popular" {% if sort == 'popular' %}selected{% endif %}>Best rated</option>
-    <option value="price_asc" {% if sort == 'price_asc' %}selected{% endif %}>Price: low to high</option>
-    <option value="price_desc" {% if sort == 'price_desc' %}selected{% endif %}>Price: high to low</option>
-    <option value="name" {% if sort == 'name' %}selected{% endif %}>Name</option>
+    {% for key, (label, _) in sorts.items() %}
+      <option value="{{ key }}" {% if key == f.sort %}selected{% endif %}>{{ label }}</option>
+    {% endfor %}
   </select>
   <button class="btn" type="submit">Show</button>
-  {% if q or category %}<a class="reset" href="{{ url_for('customer.index') }}">Reset</a>{% endif %}
+  {% if f.q or f.category or f.min_price is not none or f.max_price is not none or f.in_stock %}<a class="reset" href="{{ url_for('customer.index') }}">Reset</a>{% endif %}
 </form>
+{% if f.note %}<div class="alert alert-info">{{ f.note }}</div>{% endif %}
 
-<h2 class="section-title">Catalog <span class="count">{{ products|length }} product{{ 's' if products|length != 1 }}{% if q %} for “{{ q }}”{% endif %}</span></h2>
+<h2 class="section-title">Catalog <span class="count">{{ products|length }} product{{ 's' if products|length != 1 }}{% if f.q %} for “{{ f.q }}”{% endif %} · {{ sorts[f.sort][0] }}</span></h2>
 {% if products %}
 <div class="grid">
   {% for p in products %}
@@ -37,8 +44,10 @@
       <div class="cat">{{ p['category'] }}</div>
       <h3>{{ p['name'] }}</h3>
     </a>
+    {% if hints.get(p['product_id']) %}<div class="hit">Found in: {{ hints[p['product_id']] }}</div>{% endif %}
     <div class="card-rating">{{ stars(p['rating_avg'], p['rating_count']) }}</div>
     <div class="price">{{ p['price']|kzt }}</div>
+    {% if f.sort == 'bestsellers' %}<div class="sold">Sold: {{ p['sold'] }}</div>{% endif %}
     {% if p['stock_qty'] > 0 %}
       <div class="stock in">In stock: {{ p['stock_qty'] }}</div>
       <a class="btn btn-wide" href="{{ url_for('customer.product_page', product_id=p['product_id']) }}">View and order</a>

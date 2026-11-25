@@ -1,0 +1,15 @@
+/* Customer side, week 13 additions (owner: Abenov Altair) */
+.search-form .search { flex: 1 1 100%; }
+.price-range { display: flex; align-items: center; gap: 6px; }
+.price-range input { width: 110px; }
+.check { display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--text); white-space: nowrap; }
+.hit { font-size: 12px; color: var(--teal); background: #EEF5FA; border-radius: 6px; padding: 3px 8px; margin: 0 0 8px; }
+.sold { font-size: 13px; color: var(--muted); }
+.delivery { display: flex; gap: 10px; align-items: center; margin: 4px 0 16px; font-size: 14px; }
+.badge-waiting { background: #FFF4E5; color: #9A4A0B; }
+.badge-on_the_way { background: #E7F0F7; color: var(--teal); }
+.badge-delivered { background: #E6F2EC; color: var(--green); }
+@media (max-width: 560px) {
+  .price-range { flex: 1 1 100%; }
+  .price-range input { flex: 1 1 0; width: 0; min-width: 0; }
+}

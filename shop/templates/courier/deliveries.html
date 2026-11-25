@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Deliveries · Online Shop{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/courier.css') }}">{% endblock %}
+{% macro order_card(o, action=None, label=None, done=False) %}
+  <article class="delivery-card">
+    <div class="dc-head">
+      <b>Order #{{ o['order_id'] }}</b>
+      <span class="muted">{{ o['total_amount']|kzt }} · paid</span>
+    </div>
+    <div class="dc-addr">{{ o['address'] }}</div>
+    <div class="dc-who">{{ o['full_name'] }}{% if o['phone'] %} · <a href="tel:{{ o['phone']|replace(' ', '') }}">{{ o['phone'] }}</a>{% endif %}</div>
+    <div class="dc-items muted">{{ o['products'] }}</div>
+    {% if done %}<div class="dc-time muted">Delivered {{ o['delivered_at'] }}</div>{% endif %}
+    {% if action %}
+      <form method="post" action="{{ url_for(action, order_id=o['order_id']) }}">
+        <button class="btn btn-wide" type="submit">{{ label }}</button>
+      </form>
+    {% endif %}
+  </article>
+{% endmacro %}
+{% block content %}
+<h1 class="page-title">Deliveries</h1>
+
+<section class="dc-section">
+  <h2 class="sub first">On the way with me <span class="count-pill">{{ on_the_way|length }}</span></h2>
+  <div class="dc-grid">
+    {% for o in on_the_way %}{{ order_card(o, 'courier.delivered', 'Mark as delivered') }}
+    {% else %}<p class="muted">You have no orders on the way.</p>{% endfor %}
+  </div>
+</section>
+
+<section class="dc-section">
+  <h2 class="sub first">Waiting for a courier <span class="count-pill">{{ waiting|length }}</span></h2>
+  <p class="muted small">Only paid orders appear here.</p>
+  <div class="dc-grid">
+    {% for o in waiting %}{{ order_card(o, 'courier.take', 'Take this order') }}
+    {% else %}<p class="muted">No paid orders are waiting.</p>{% endfor %}
+  </div>
+</section>
+
+<section class="dc-section">
+  <h2 class="sub first">Delivered by me <span class="count-pill">{{ delivered|length }}</span></h2>
+  <div class="dc-grid">
+    {% for o in delivered %}{{ order_card(o, done=True) }}
+    {% else %}<p class="muted">Nothing delivered yet.</p>{% endfor %}
+  </div>
+</section>
+{% endblock %}

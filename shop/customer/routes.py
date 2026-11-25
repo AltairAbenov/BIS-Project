@@ -9,49 +9,29 @@ from werkzeug.security import generate_password_hash
 
 from ..auth import login_required, start_customer_session
 from ..catalog.catalog import get_features, new_order_token
+from ..courier.delivery import delivery_status
 from ..db import get_db
 from ..payments.payments import payment_history
 from . import bp
 from .orders import OrderError, get_order, get_product, list_orders, place_order
 from .reviews import ReviewError, add_review, product_reviews, rating_summary, review_status
+from .search import SORTS, matched_feature, read_filters, search_products
 
-# ---------- main page: search, filter, sort (owner: Abenov Altair) ----------
-
-SORTS = {
-    "popular": "rating_avg DESC, rating_count DESC, p.name",
-    "price_asc": "p.price ASC",
-    "price_desc": "p.price DESC",
-    "name": "p.name",
-}
-
+# ---------- main page: search, filter, sort (owner: Abenov Altair; logic in search.py) ----------
 
 @bp.route("/")
 def index():
     db = get_db()
-    q = request.args.get("q", "").strip()
-    category = request.args.get("category", "")
-    sort = request.args.get("sort", "popular")
-    if sort not in SORTS:
-        sort = "popular"
-
-    sql = (
-        "SELECT p.product_id, p.name, p.category, p.price, p.stock_qty, "
-        "       COALESCE(ROUND(AVG(r.rating), 1), 0) AS rating_avg, COUNT(r.review_id) AS rating_count "
-        "FROM Products p LEFT JOIN Reviews r ON r.product_id = p.product_id WHERE 1 = 1 "
-    )
-    params = []
-    if q:
-        sql += "AND p.name LIKE ? "          # value is passed as a parameter, not glued into SQL
-        params.append(f"%{q}%")
-    if category:
-        sql += "AND p.category = ? "
-        params.append(category)
-    sql += "GROUP BY p.product_id ORDER BY " + SORTS[sort]  # only names from SORTS are used
-
-    products = db.execute(sql, params).fetchall()
+    f = read_filters(request.args)
+    products = search_products(db, f)
+    hints = {}
+    if f["q"]:
+        for p in products:
+            if not all(w.lower() in p["name"].lower() for w in f["q"].split()):
+                hints[p["product_id"]] = matched_feature(db, p["product_id"], f["q"])
     categories = [r[0] for r in db.execute("SELECT DISTINCT category FROM Products ORDER BY category")]
     return render_template("customer/index.html", products=products, categories=categories,
-                           q=q, category=category, sort=sort)
+                           f=f, sorts=SORTS, hints=hints)
 
 
 # ---------- product page: features, rating, reviews, order form ----------
@@ -196,7 +176,8 @@ def order_detail(order_id):
     if order is None:
         abort(404)  # the order does not exist or belongs to another customer
     return render_template("customer/order_detail.html", order=order, items=items,
-                           payments=payment_history(db, order_id))
+                           payments=payment_history(db, order_id),
+                           delivery=delivery_status(db, order_id))
 
 
 @bp.route("/orders")
